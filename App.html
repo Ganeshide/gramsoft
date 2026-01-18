@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gram Soft Form (Online Sync & Payment)</title>
+<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+<style>
+/* ----------------------------------------------------------------------- */
+/* CSS STYLES                                     */
+/* ----------------------------------------------------------------------- */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-x: hidden; 
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+}
+body{
+    overflow-y: auto;
+}
+
+.header{
+    width:100%;
+    height:60px;
+    background:#4CAF50;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 16px;
+    box-sizing:border-box;
+    position:fixed;
+    top:0;
+    left:0;
+    z-index: 5000; 
+} 
+.header h1{font-size:20px;margin:0;}
+.menu-icon{font-size:28px;cursor:pointer;}
+.dropdown{position:absolute;top:60px;left:0;width:100%;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.2);display:none;z-index:4999;}
+.dropdown button{width:100%;padding:14px;text-align:left;border:none;background:#fff;font-size:16px;cursor:pointer;border-bottom:1px solid #eee;}
+.dropdown button:hover{background:#f0f0f0;}
+
+.content-wrapper {
+    width: 200vw; 
+    display: flex;
+    transition: transform 0.3s ease-in-out;
+    margin-top: 60px; 
+    height: calc(100vh - 60px); 
+}
+.container {
+    width: 100vw; 
+    height: 100%; 
+    padding: 20px;
+    background: #fff;
+    overflow-y: auto;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+#record{padding-bottom: 60px;}
+
+h2{text-align:center;margin-bottom:20px;font-size:22px;color:#333;}
+.form-group{margin-bottom:15px;}
+label{display:block;margin-bottom:8px;color:#444;font-size:16px;}
+#recordSearch {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #4CAF50;
+    border-radius: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+#recordSearch:focus {
+    border-color: #45a049;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+}
+
+input, select, textarea{width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:16px;box-sizing:border-box;}
+input[readonly], textarea[readonly] {background-color: #f5f5f5; cursor: pointer;}
+textarea{resize:none;min-height:60px;line-height:1.5;}
+button{padding:12px;border:none;border-radius:10px;cursor:pointer;margin-top:6px;font-size:16px;}
+.btn{background:#4CAF50;color:#fff;display:block;width:100%;}
+.btn:hover{background:#45a049;}
+.btn-danger{background:#e74c3c;color:#fff;}
+.btn-danger:hover{background:#c0392b;}
+#record{text-align:left;color:#555;}
+
+.modal{display:none;position:fixed;z-index:2000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);}
+.modal-content{background:#fff;margin:0;padding:20px;width:100%;height:100%;border-radius:0;overflow-y:auto;box-sizing:border-box; transition: transform 0.3s ease-out;} 
+
+.blurred-background > *:not(.modal):not(.header) {
+    filter: blur(4px);
+    pointer-events: none;
+}
+
+.close{float:right;font-size:22px;cursor:pointer;color:#333;}
+.entry-row{display:flex;justify-content:space-between;align-items:center;margin:6px 0;padding:8px;border-bottom:1px solid #eee;cursor:pointer;}
+.entry-content{flex-grow:1; word-break:break-word; padding-right:15px;}
+.entry-row .icon-container{display:flex;gap:8px; flex-shrink:0; align-self:flex-start;}
+.entry-row .icon-btn{background:none;border:none;cursor:pointer;font-size:16px;color:#555;}
+.entry-row .icon-btn:hover{color:#000;}
+.radio-group{display:flex;align-items:center;gap:20px;font-size:16px;}
+.radio-group label{display:flex;align-items:center;gap:6px;cursor:pointer;}
+
+#recordDetailContent {display: flex;flex-direction: column;gap: 12px;padding-top: 10px;}
+.record-detail-item {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+.record-detail-item:active {
+    background-color: #e0e0e0;
+}
+.record-detail-label {font-weight: bold;color: #4CAF50;display: block;margin-bottom: 4px;font-size: 15px;}
+.record-detail-value {color: #333;font-size: 16px;white-space: pre-wrap;}
+
+#fieldActionModal {z-index: 3000;}
+.field-action-content {position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);background: #fff;padding: 20px;border-radius: 12px;box-shadow: 0 8px 30px rgba(0,0,0,0.2);width: 80%;max-width: 300px;text-align: center;}
+.action-icon-group {display: flex;justify-content: space-around;margin-top: 15px;}
+.action-icon-btn {
+    background: #fff;
+    border: 1px solid #ddd;
+    color: #4CAF50;
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.2s;
+    flex: 1;
+    margin: 0 4px;
+}
+.action-icon-btn:hover {background: #f0f0f0;}
+.action-icon-btn span {font-size: 20px;}
+
+#editRecordModal {z-index: 4000;}
+#editRecordForm .form-group label {font-weight: bold;color: #333;}
+#popupModal8, #popupModal9, #nestedEntryPopup {z-index: 4500;}
+
+/* Payment Modal Specific */
+#paymentModal .modal-content {
+    max-width: 90%; 
+    width: 400px; 
+    margin: 50px auto;
+    height: auto;
+    border-radius: 12px;
+}
+#qrcodeContainer {
+    padding: 10px; 
+    border: 1px solid #ddd; 
+    display: inline-block;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+#payNowLink {
+    text-decoration: none;
+    padding: 15px;
+    font-size: 18px;
+    margin-top: 20px !important;
+}
+</style>
+</head>
+<body id="appBody">
+
+<div class="header">
+<h1>Gram Soft</h1>
+<div class="menu-icon" onclick="toggleDropdown()">&#8942;</div>
+</div>
+
+<div class="dropdown" id="dropdownMenu">
+<button onclick="showForm()">Form</button>
+<button onclick="showRecord()">Record</button>
+</div>
+
+<div class="content-wrapper" id="contentWrapper">
+
+    <div class="container" id="form">
+        <h2>Mobile Form (1–15)</h2>
+        <form id="mainForm">
+            <div class="form-group"><label>Field 1 (ID)</label><input type="number" name="field1" placeholder="Enter unique ID number" step="any" required></div>
+            <div class="form-group"><label>Field 2</label><input type="text" name="field2"></div>
+            <div class="form-group"><label>Field 3</label><input type="text" name="field3"></div>
+            <div class="form-group"><label>Field 4</label><input type="text" name="field4"></div>
+            <div class="form-group"><label>Field 5</label><input type="text" name="field5"></div>
+            <div class="form-group"><label>Field 6</label><input type="number" name="field6" step="any"></div>
+            <div class="form-group"><label>Field 7</label><input type="number" name="field7" step="any"></div>
+            <div class="form-group"><label>Field 8</label><input type="text" id="field8" readonly placeholder="Click to add 4 details" name="field8"></div>
+            <div class="form-group"><label>Field 9</label><textarea id="field9" readonly placeholder="Click to manage entries (5 per line)" name="field9"></textarea></div>
+            <div class="form-group"><label>Field 10</label>
+            <div class="radio-group">
+            <label><input type="radio" name="field10" value="आहे"> आहे</label>
+            <label><input type="radio" name="field10" value="नाही"> नाही</label>
+            </div>
+            </div>
+            <div class="form-group"><label>Field 11</label>
+            <div class="radio-group">
+            <label><input type="radio" name="field11" value="आहे"> आहे</label>
+            <label><input type="radio" name="field11" value="नाही"> नाही</label>
+            </div>
+            </div>
+            <div class="form-group"><label>Field 12</label>
+            <div class="radio-group">
+            <label><input type="radio" name="field12" value="आहे"> आहे</label>
+            <label><input type="radio" name="field12" value="नाही"> नाही</label>
+            </div>
+            </div>
+            <div class="form-group"><label>Field 13</label><input type="number" name="field13" step="any"></div>
+            <div class="form-group"><label>Field 14</label><input type="text" name="field14"></div>
+            <div class="form-group"><label>Field 15 (Amount)</label><input type="number" name="field15" step="0.01" placeholder="Enter Amount for Payment"></div>
+            <button type="submit" class="btn" id="submitButton">Submit</button>
+        </form>
+    </div>
+
+    <div class="container" id="record">
+        <h2>Saved Records</h2>
+        <input type="text" id="recordSearch" onkeyup="filterRecords()" placeholder="Search by any field..." title="Type to search by any field value">
+        <div id="loadingIndicator" style="text-align:center; color:#4CAF50; margin-top:20px; font-weight:bold; display:none;">Loading records from server...</div>
+        <div id="recordList"></div>
+    </div>
+</div>
+<div id="popupModal8" class="modal"><div class="modal-content"><span class="close" onclick="closePopup('popupModal8')">&times;</span><h3>Enter 4 Values</h3><div class="form-group"><input type="text" id="pop81" placeholder="Value 1"></div><div class="form-group"><input type="text" id="pop82" placeholder="Value 2"></div><div class="form-group"><input type="text" id="pop83" placeholder="Value 3"></div><div class="form-group"><input type="text" id="pop84" placeholder="Value 4"></div><button class="btn" type="button" onclick="savePopup8()">Save</button></div></div>
+<div id="popupModal9" class="modal"><div class="modal-content"><h3>Manage Entries (5 per line)</h3><div id="entryList"></div><div style="margin-top:12px;"><button class="btn" onclick="openNestedEntry()">+ Add New Entry</button><button class="btn" onclick="submitAllEntries()">Submit</button> </div></div></div>
+<div id="nestedEntryPopup" class="modal"><div class="modal-content"><h3>Add / Edit Entry (5 Fields)</h3><div id="nestedForm"></div><button class="btn" onclick="saveNestedEntry()">Save Entry</button></div></div>
+<div id="recordDetailPopup" class="modal"><div class="modal-content" id="recordDetailContentWrapper"><span class="close" onclick="closeDetailPopup()">&times;</span><h3>Record Details (ID: <span id="detailRecordId"></span>)</h3><div id="recordDetailContent"></div></div></div>
+<div id="fieldActionModal" class="modal"><div class="field-action-content"><h4>Field Actions (<span id="actionFieldName"></span>)</h4><div class="action-icon-group"><button class="action-icon-btn" onclick="fieldActionExecute('edit')"><span>✏️</span>Edit</button><button class="action-icon-btn" onclick="fieldActionExecute('delete')"><span>🗑️</span>Delete</button><button class="action-icon-btn" onclick="fieldActionExecute('share')"><span>📤</span>Share</button><button class="action-icon-btn" onclick="fieldActionExecute('pdf')"><span>📄</span>PDF</button></div><button class="btn-danger" style="margin-top: 20px;" onclick="closeFieldActionModal()">Cancel</button></div></div>
+<div id="editRecordModal" class="modal"><div class="modal-content"><span class="close" onclick="closeEditModal()">&times;</span><h3>Edit Record (Field 1: <span id="editField1Value"></span>)</h3><form id="editRecordForm"></form><button class="btn" onclick="saveEditedRecord()">Update Record</button></div></div>
+
+<div id="paymentModal" class="modal">
+    <div class="modal-content" style="max-width: 90%; width: 400px; margin: 50px auto;">
+        <span class="close" onclick="closePopup('paymentModal')">&times;</span>
+        <h3>Make UPI Payment</h3>
+        <p>Record ID: <span id="paymentRecordId" style="font-weight: bold;"></span></p>
+        <p>Amount: ₹ <span id="paymentAmount" style="font-weight: bold; color: #4CAF50;"></span></p>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <div id="qrcodeContainer" style="padding: 10px; border: 1px solid #ddd; display: inline-block;">
+                <p>Loading QR Code...</p>
+            </div>
+            <p style="margin-top: 15px; font-size: 14px; color: #888;">Scan the QR code or click Pay Now:</p>
+            
+            <a id="payNowLink" href="#" target="_blank" class="btn" style="margin-top: 15px; text-decoration: none;">
+                Pay Now
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// =========================================================================
+// !!! 🛑 1. APPS SCRIPT URL: REPLACE THIS 🛑 !!!
+// =========================================================================
+const GOOGLE_SHEET_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE'; 
+
+// =========================================================================
+// !!! 🛑 2. UPI CONFIGURATION: REPLACE THIS 🛑 !!!
+// =========================================================================
+const UPI_VPA = 'your_upi_id@bank';     // <-- अपनी UPI ID यहाँ बदलें (उदा. 9876543210@paytm)
+const UPI_MERCHANT_NAME = 'Gram Soft'; // <-- मर्चेंट का नाम
+const UPI_TXN_NOTE = 'GramSoftPayment'; // लेनदेन के लिए नोट
+
+// GLOBAL VARIABLES
+let records = [];
+let currentRecordIndex = -1; 
+let currentFieldName = '';
+let activeField8Input = null; 
+let activeField9Input = null; 
+let entries = [];
+let currentQRCode = null; // UPI QR code instance
+
+const submitButton = document.getElementById('submitButton');
+const loadingIndicator = document.getElementById('loadingIndicator');
+const recordDetailPopup = document.getElementById('recordDetailPopup');
+const recordDetailContentWrapper = document.getElementById('recordDetailContentWrapper');
+
+
+// ----------------------------------------------------------------------------------
+// UPI DEEP LINK UTILITY
+// ----------------------------------------------------------------------------------
+function createUpiLink(amount, id) {
+    // UPI Deep Link/Intent URL format
+    return `upi://pay?pa=${UPI_VPA}&pn=${encodeURIComponent(UPI_MERCHANT_NAME)}&mc=0000&tid=${id}&tr=${id}&tn=${encodeURIComponent(UPI_TXN_NOTE)}&am=${amount}&cu=INR`;
+}
+
+
+// ----------------------------------------------------------------------------------
+// GOOGLE SHEETS API INTERFACE: LOAD, SAVE, UPDATE, DELETE
+// ----------------------------------------------------------------------------------
+
+async function loadDataFromSheet() {
+    loadingIndicator.style.display = 'block';
+    // ... (loadDataFromSheet logic - UNCHANGED) ...
+    try {
+        const response = await fetch(GOOGLE_SHEET_SCRIPT_URL, {
+            method: 'GET', mode: 'cors'
+        });
+        const result = await response.json();
+        if (result.result === 'success') {
+            records = result.data || []; 
+            renderRecords();
+            return true;
+        } else {
+            alert("Error loading data from Google Sheet: " + result.message);
+            return false;
+        }
+    } catch (error) {
+        console.error("Network or Script error during data load:", error);
+        alert("Network Error: Could not load data from Google Sheet.");
+        return false;
+    } finally {
+        loadingIndicator.style.display = 'none';
+    }
+}
+
+
+async function sendDataToSheet(data) {
+    submitButton.disabled = true;
+    submitButton.textContent = 'Submitting...';
+    
+    const formData = new URLSearchParams();
+    for (const key in data) {
+        formData.append(key, data[key]);
+    }
+    
+    try {
+        const response = await fetch(GOOGLE_SHEET_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        });
+        const result = await response.json();
+        if (result.result === 'success') {
+            alert("Record saved successfully to Google Sheet!");
+            return result.data.rowIndex; 
+        } else {
+            console.error("Sheet submission failed:", result.message);
+            alert("Google Sheet Submission Failed: " + result.message);
+            return null;
+        }
+    } catch (error) {
+        console.error("Error submitting to Google Sheet:", error);
+        alert("Google Sheet Submission Failed (Network Error or Script Issue).");
+        return null;
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Submit';
+    }
+}
+
+async function updateDataInSheet(data, action) {
+    const record = records[currentRecordIndex];
+    if (!record || !record.rowIndex) {
+         alert("Error: Record row index not found for update/delete.");
+         return false;
+    }
+    
+    const payload = { ...data, rowIndex: record.rowIndex, action: action };
+
+    try {
+        const response = await fetch(GOOGLE_SHEET_SCRIPT_URL, {
+            method: 'PUT',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.result === 'success') {
+            alert(`Record ${action}d successfully in sheet!`);
+            return true;
+        } else {
+            console.error(`${action} failed in sheet:`, result.message);
+            alert(`Online ${action.toUpperCase()} Failed: ` + result.message);
+            return false;
+        }
+    } catch (error) {
+        console.error(`Error during ${action}:`, error);
+        alert(`Network Error during ${action}.`);
+        return false;
+    }
+}
+
+// ----------------------------------------------------------------------------------
+// PDF GENERATION FUNCTION
+// ----------------------------------------------------------------------------------
+
+async function generateTemplatePDF(record) {
+    if (!record || !record.field1) {
+        alert("Record ID (Field 1) is missing.");
+        return;
+    }
+
+    const idValue = record.field1;
+    const originalPdfBtn = document.querySelector('.action-icon-btn[onclick="fieldActionExecute(\'pdf\')"]');
+    
+    originalPdfBtn.style.backgroundColor = '#FFC107'; 
+    originalPdfBtn.innerHTML = '<span>⏳</span>Generating...';
+
+    const formData = new URLSearchParams();
+    formData.append('action', 'generate_pdf');
+    formData.append('id_value', idValue); 
+
+    try {
+        const response = await fetch(GOOGLE_SHEET_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        });
+
+        const result = await response.json();
+
+        if (result.result === 'success' && result.data && result.data.pdfUrl) {
+            window.open(result.data.pdfUrl, '_blank');
+        } else {
+            console.error("PDF generation failed:", result.message);
+            alert("Error: Could not generate Template PDF. " + result.message);
+        }
+    } catch (error) {
+        console.error("Error connecting to PDF API:", error);
+        alert("Network Error: Could not connect to the PDF generation service.");
+    } finally {
+        originalPdfBtn.style.backgroundColor = '';
+        originalPdfBtn.innerHTML = '<span>📄</span>PDF';
+        closeFieldActionModal();
+    }
+}
+
+// ----------------------------------------------------------------------------------
+// 🛑 NEW: PAYMENT FUNCTIONS 🛑
+// ----------------------------------------------------------------------------------
+
+function showPaymentModal(record) {
+    const amount = parseFloat(record.field15);
+    const id = record.field1;
+
+    if (isNaN(amount) || amount <= 0) {
+        alert("Invalid or missing amount in Field 15. Cannot proceed with payment.");
+        return;
+    }
+
+    const upiLink = createUpiLink(amount.toFixed(2), id);
+    
+    document.getElementById('paymentRecordId').textContent = id;
+    document.getElementById('paymentAmount').textContent = amount.toFixed(2);
+    
+    const payNowLink = document.getElementById('payNowLink');
+    payNowLink.href = upiLink; // Link the 'Pay Now' button
+
+    const qrcodeContainer = document.getElementById('qrcodeContainer');
+    qrcodeContainer.innerHTML = '';
+    
+    if (currentQRCode) {
+        currentQRCode.clear();
+        currentQRCode = null;
+    }
+
+    // Initialize QRCode object
+    currentQRCode = new QRCode(qrcodeContainer, {
+        text: upiLink,
+        width: 150,
+        height: 150,
+        colorDark : "#000000",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
+    });
+
+    document.getElementById('paymentModal').style.display = 'block';
+    applyBlur(); 
+}
+
+function closePaymentModal() {
+    closePopup('paymentModal');
+    removeBlur();
+    if (currentQRCode) {
+        currentQRCode.clear(); 
+    }
+}
+
+// ----------------------------------------------------------------------------------
+// APP INITIALIZATION & SUBMIT HANDLER
+// ----------------------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', (event) => {
+    loadDataFromSheet();
+});
+
+document.getElementById("mainForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    let recordData={};
+    for(let i=1;i<=15;i++){
+        let el = this.querySelector(`[name=field${i}]`);
+        const fieldName = `field${i}`;
+        if(el && el.type==="radio"){
+            let radios = document.getElementsByName(el.name);
+            recordData[fieldName] = [...radios].find(r=>r.checked)?.value || "";
+        } else if (el) {
+            recordData[fieldName] = el.value.trim();
+        } else {
+            recordData[fieldName] = ""; 
+        }
+    }
+    
+    if(records.some(r=>r.field1===recordData.field1)){ alert("Duplicate entry for Field 1! Record not saved."); return; }
+    
+    const sheetRowIndex = await sendDataToSheet(recordData);
+    
+    if (sheetRowIndex) {
+        loadDataFromSheet(); 
+    }
+
+    this.reset(); 
+    document.getElementById("field8").value="";
+    document.getElementById("field9").value="";
+});
+
+// ----------------------------------------------------------------------------------
+// ACTION HANDLERS (VIEW, EDIT, DELETE, ACTION MODAL)
+// ----------------------------------------------------------------------------------
+async function deleteCurrentRecord(){ 
+    if(currentRecordIndex === -1) return;
+    if(confirm("Are you sure you want to delete this record (Field 1: " + records[currentRecordIndex].field1 + ")?")){ 
+        const success = await updateDataInSheet(null, 'delete');
+        if (success) {
+            records.splice(currentRecordIndex, 1); 
+            closeDetailPopup(); 
+            loadDataFromSheet();
+        }
+    } 
+}
+
+async function saveEditedRecord() {
+    const form = document.getElementById('editRecordForm');
+    const newRecordData = {};
+    let isFormValid = true;
+
+    for (let i = 1; i <= 15; i++) {
+        const fieldName = `field${i}`;
+        let element = form.querySelector(`[name=${fieldName}]`);
+
+        if (i >= 10 && i <= 12) { 
+            const radioElements = form.querySelectorAll(`input[name=${fieldName}]:checked`);
+            newRecordData[fieldName] = radioElements.length > 0 ? radioElements[0].value.trim() : "";
+        } else if (element) { 
+            newRecordData[fieldName] = element.value.trim();
+        } else {
+            newRecordData[fieldName] = "";
+        }
+        if (i === 1 && newRecordData[fieldName] === "") { alert("Field 1 cannot be empty."); isFormValid = false; break; }
+    }
+    if (!isFormValid) { return; }
+    
+    if (currentRecordIndex !== -1) {
+        const success = await updateDataInSheet(newRecordData, 'update');
+        if (success) {
+            closeEditModal(); 
+            loadDataFromSheet();
+        }
+    } else {
+        alert("Error: No record selected for update.");
+        closeEditModal();
+    }
+}
+
+function fieldActionExecute(actionType) {
+    const record = records[currentRecordIndex];
+    if (!record) { closeFieldActionModal(); return; }
+    
+    if (actionType === 'edit') {
+        closeFieldActionModal();
+        openEditModal(); 
+    } else if (actionType === 'delete') {
+        closeFieldActionModal();
+        deleteCurrentRecord(); 
+    } else if (actionType === 'share') {
+        shareCurrentRecord(record); 
+        closeFieldActionModal(); 
+    } else if (actionType === 'pdf') {
+        generateTemplatePDF(record); 
+    } else if (actionType === 'make_payment') { // 🛑 NEW HANDLER
+        closeFieldActionModal();
+        showPaymentModal(record);
+    }
+}
+
+function showFieldActions(fieldName, isPaymentField = false) {
+    currentFieldName = fieldName;
+    let displayName = fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace('field', 'Field ');
+    document.getElementById('actionFieldName').textContent = displayName;
+    
+    const actionGroup = document.querySelector('#fieldActionModal .action-icon-group');
+    
+    let paymentButton = document.getElementById('paymentActionButton');
+    if (!paymentButton) {
+        paymentButton = document.createElement('button');
+        paymentButton.id = 'paymentActionButton';
+        paymentButton.className = 'action-icon-btn';
+        paymentButton.innerHTML = '<span>💳</span>Payment';
+        paymentButton.onclick = () => fieldActionExecute('make_payment');
+        const pdfButton = actionGroup.querySelector('[onclick*="pdf"]');
+        actionGroup.insertBefore(paymentButton, pdfButton); 
+    }
+
+    // Show/Hide Payment Button
+    if (isPaymentField) {
+        paymentButton.style.display = 'flex';
+    } else {
+        paymentButton.style.display = 'none';
+    }
+
+    document.getElementById('fieldActionModal').style.display = 'block';
+    applyBlur(); 
+}
+
+function viewRecord(i){
+    let r=records[i]; 
+    currentRecordIndex = i; 
+    
+    document.getElementById('detailRecordId').textContent = r.field1; 
+    
+    const detailContent = document.getElementById("recordDetailContent");
+    detailContent.innerHTML="";
+    
+    recordDetailContentWrapper.style.transform = 'translateX(0)';
+
+    for(let i=1; i<=15; i++){
+        const key = `field${i}`;
+        let displayName = `Field ${i}`;
+        if (i === 1) displayName = 'Field 1 (ID)';
+        if (i === 15) displayName = 'Field 15 (Amount)';
+        
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'record-detail-item';
+        // 🛑 Check if it's Field 15 (Payment Field)
+        if (i === 15 && parseFloat(r[key]) > 0) {
+            itemDiv.onclick = () => showFieldActions(key, true); 
+        } else {
+            itemDiv.onclick = () => showFieldActions(key);
+        }
+
+        itemDiv.innerHTML=`
+            <span class="record-detail-label">${displayName}:</span>
+            <span class="record-detail-value">${r[key] || 'N/A'}</span>
+        `;
+        detailContent.appendChild(itemDiv);
+    }
+    
+    document.getElementById("recordDetailPopup").style.display="block";
+    applyBlur(); 
+}
+
+function renderRecords(listToRender = records){
+    let container=document.getElementById("recordList"); 
+    container.innerHTML="";
+
+    if (listToRender.length === 0) {
+        container.innerHTML = `<p style="text-align:center; color:#888;">No records found.</p>`;
+        return;
+    }
+
+    listToRender.forEach((r)=>{
+        const originalIndex = records.findIndex(originalR => originalR.field1 === r.field1);
+
+        let div=document.createElement("div"); div.className="entry-row";
+        let content=document.createElement("div"); content.className="entry-content";
+        content.innerHTML=`<b>Field 1 (ID):</b> ${r.field1}<br><b>Field 3:</b> ${r.field3 || 'N/A'}<br><b>Field 15 (Amount):</b> ₹${r.field15 || '0'}`;
+        div.appendChild(content);
+
+        let icons=document.createElement("div"); icons.className="icon-container";
+        let actionBtn=document.createElement("button"); actionBtn.innerHTML="View/Action"; actionBtn.className="icon-btn"; 
+        actionBtn.onclick=()=>viewRecord(originalIndex);
+        icons.appendChild(actionBtn);
+        
+        div.appendChild(icons);
+        container.appendChild(div);
+    });
+}
+// ----------------------------------------------------------------------------------
+// UTILITY/MODAL/SWIPE FUNCTIONS (mostly UNCHANGED)
+// ----------------------------------------------------------------------------------
+function filterRecords() {
+    const searchTerm = document.getElementById('recordSearch').value.toLowerCase();
+    const filteredRecords = records.filter(record => {
+        for (const key in record) {
+            if (record[key] && String(record[key]).toLowerCase().includes(searchTerm)) {
+                return true;
+            }
+        }
+        return false;
+    });
+    renderRecords(filteredRecords);
+}
+function openEditModal() {
+    if (currentRecordIndex === -1) return;
+    const r = records[currentRecordIndex]; 
+    const formContainer = document.getElementById('editRecordForm');
+    formContainer.innerHTML = '';
+    document.getElementById('editField1Value').textContent = r.field1; 
+    for(let i=1; i<=15; i++) {
+        const fieldName = `field${i}`;
+        const labelText = i === 1 ? 'Field 1 (ID)' : `Field ${i}`;
+        const currentValue = r[fieldName] || '';
+        
+        let formGroup = document.createElement('div');
+        formGroup.className = 'form-group';
+        let label = document.createElement('label');
+        label.textContent = labelText;
+        formGroup.appendChild(label);
+        
+        if (i >= 10 && i <= 12) { 
+            let radioGroup = document.createElement('div'); radioGroup.className = 'radio-group';
+            ['आहे', 'नाही'].forEach(val => {
+                let radioLabel = document.createElement('label'); let radioInput = document.createElement('input');
+                radioInput.type = 'radio'; radioInput.name = fieldName; radioInput.value = val;
+                if (currentValue === val) {radioInput.checked = true;}
+                radioLabel.appendChild(radioInput); radioLabel.appendChild(document.createTextNode(` ${val}`)); radioGroup.appendChild(radioLabel);
+            });
+            formGroup.appendChild(radioGroup);
+        } else if (i === 9) { 
+            let textarea = document.createElement('textarea'); textarea.name = fieldName; textarea.value = currentValue;
+            textarea.readOnly = true; textarea.placeholder = "Click to manage entries";
+            textarea.onclick = function() { activeField9Input = textarea; openPopup9(textarea.value); };
+            formGroup.appendChild(textarea);
+        } else { 
+            let input = document.createElement('input'); input.name = fieldName; input.value = currentValue;
+            input.type = (i === 1 || i === 6 || i === 7 || i === 13 || i === 15) ? 'number' : 'text'; // Field 15 is number
+            if (i === 1) { input.readOnly = true; input.style.backgroundColor = '#eee'; } 
+            else if (i === 8) {
+                input.readOnly = true; input.placeholder = "Click to enter 4 values";
+                input.onclick = function() { activeField8Input = input; openPopup8(input.value); };
+            }
+            formGroup.appendChild(input);
+        }
+        formContainer.appendChild(formGroup);
+    }
+    document.getElementById('editRecordModal').style.display = 'block';
+}
+
+function shareCurrentRecord(record){
+    if(currentRecordIndex === -1) return;
+    let shareText = `Record Details (Field 1: ${record.field1}):\n`;
+    for(const key in record) {
+        shareText += `${key.charAt(0).toUpperCase() + key.slice(1).replace('field', 'Field ')}: ${record[key] || 'N/A'}\n`;
+    }
+
+    if (navigator.share) {
+        navigator.share({
+            title: 'Gram Soft Record Details',
+            text: shareText
+        }).catch(error => console.error('Error sharing:', error));
+    } else {
+        alert("Share content (Simulated):\n\n" + shareText);
+    }
+}
+function toggleDropdown(){ let d=document.getElementById("dropdownMenu"); d.style.display = d.style.display==="block" ? "none" : "block";}
+function showForm(){switchView('right');document.getElementById("dropdownMenu").style.display="none";}
+function showRecord(){switchView('left');document.getElementById("dropdownMenu").style.display="none";}
+function switchView(direction) {
+    const wrapper = document.getElementById('contentWrapper');
+    let isFormView = wrapper.style.transform === 'translateX(0px)' || wrapper.style.transform === '';
+    
+    if (direction === 'left' && isFormView) {
+        wrapper.style.transform = 'translateX(-100vw)';
+        isFormView = false;
+        document.getElementById('recordSearch').value = '';
+        renderRecords();
+    } else if (direction === 'right' && !isFormView) {
+        wrapper.style.transform = 'translateX(0)';
+        isFormView = true;
+    } else {
+        wrapper.style.transform = isFormView ? 'translateX(0)' : 'translateX(-100vw)';
+    }
+}
+function applyBlur() { document.body.classList.add('blurred-background'); }
+function removeBlur() { document.body.classList.remove('blurred-background'); }
+function closePopup(id){ document.getElementById(id).style.display="none"; }
+function closeDetailPopup() {
+    recordDetailContentWrapper.style.transform = 'translateX(0)';
+    closePopup('recordDetailPopup');
+    removeBlur(); 
+    currentRecordIndex = -1;
+}
+function closeEditModal() {
+    closePopup('editRecordModal');
+    removeBlur(); 
+    currentRecordIndex = -1; 
+}
+function closeFieldActionModal() {
+    closePopup('fieldActionModal');
+    removeBlur(); 
+    currentFieldName = '';
+}
+window.onclick=function(e){ 
+    if(e.target.classList.contains("modal")) {
+        if(e.target.id === 'recordDetailPopup') {
+            closeDetailPopup();
+        } else if (e.target.id === 'editRecordModal') {
+            closeEditModal();
+        } else if (e.target.id === 'fieldActionModal') {
+            closeFieldActionModal();
+        } else if (e.target.id === 'paymentModal') { // 🛑 NEW HANDLER
+            closePaymentModal();
+        } else {
+            e.target.style.display="none"; 
+        }
+    }
+}
+const field8Main = document.getElementById("field8");
+field8Main.onclick = function() { activeField8Input = field8Main; openPopup8(field8Main.value); };
+function openPopup8(currentValue) {
+    let vals = currentValue ? currentValue.split(" ") : [];
+    document.getElementById("pop81").value = vals[0] || ""; document.getElementById("pop82").value = vals[1] || "";
+    document.getElementById("pop83").value = vals[2] || ""; document.getElementById("pop84").value = vals[3] || "";
+    document.getElementById("popupModal8").style.display = "block";
+}
+function savePopup8() {
+    let v1 = document.getElementById("pop81").value.trim(); let v2 = document.getElementById("pop82").value.trim();
+    let v3 = document.getElementById("pop83").value.trim(); let v4 = document.getElementById("pop84").value.trim();
+    const newValue = [v1, v2, v3, v4].filter(Boolean).join(" ");
+    if (activeField8Input) { activeField8Input.value = newValue; }
+    closePopup('popupModal8'); activeField8Input = null; 
+}
+const field9Main = document.getElementById("field9");
+field9Main.onclick = function() { activeField9Input = field9Main; openPopup9(field9Main.value); };
+function openPopup9(currentValue) {
+    entries = currentValue ? currentValue.split("\n") : []; renderList();
+    document.getElementById("popupModal9").style.display = "block";
+}
+function renderList() {
+    const entryList = document.getElementById("entryList");
+    entryList.innerHTML = "";
+    entries.forEach((line, i) => {
+        let row = document.createElement("div"); row.className = "entry-row";
+        let span = document.createElement("span"); span.className="entry-content"; span.textContent = line;
+        let icons = document.createElement("div"); icons.className = "icon-container";
+        let editBtn = document.createElement("button"); editBtn.innerHTML = "✏️"; editBtn.className = "icon-btn"; editBtn.onclick = () => editNested(i);
+        let deleteBtn = document.createElement("button"); deleteBtn.innerHTML = "🗑️"; deleteBtn.className = "icon-btn"; deleteBtn.onclick = () => deleteNested(i);
+        icons.appendChild(editBtn); icons.appendChild(deleteBtn);
+        row.appendChild(span); row.appendChild(icons); entryList.appendChild(row);
+    });
+    document.getElementById("nestedForm").innerHTML = ""; nestedEditingIndex = null;
+}
+function openNestedEntry(){
+    const nestedForm = document.getElementById("nestedForm");
+    nestedEditingIndex=null; nestedForm.innerHTML="";
+    for(let i=0;i<5;i++){
+        let inp;
+        if(i===0||i===4){ 
+            inp=document.createElement("select");
+            ["123","FIR","Option3"].forEach(opt=>{let el=document.createElement("option"); el.value=opt; el.text=opt; inp.appendChild(el);});
+        } else { inp=document.createElement("input"); inp.type="text"; }
+        inp.placeholder="Field "+(i+1);
+        inp.style.padding="12px"; inp.style.marginBottom="8px"; inp.style.width="100%";
+        nestedForm.appendChild(inp);
+    }
+    document.getElementById("nestedEntryPopup").style.display="block";
+}
+function editNested(i){
+    const nestedForm = document.getElementById("nestedForm");
+    nestedEditingIndex=i; let vals=entries[i].split(" "); nestedForm.innerHTML="";
+    for(let j=0;j<5;j++){
+        let inp;
+        if(j===0||j===4){
+            inp=document.createElement("select");
+            ["123","FIR","Option3"].forEach(opt=>{let el=document.createElement("option"); el.value=opt; el.text=opt; if(vals[j]===opt) el.selected=true; inp.appendChild(el); });
+        } else { inp=document.createElement("input"); inp.type="text"; inp.value=vals[j]||""; }
+        inp.placeholder="Field "+(j+1); inp.style.padding="12px"; inp.style.marginBottom="8px"; inp.style.width="100%";
+        nestedForm.appendChild(inp);
+    }
+    document.getElementById("nestedEntryPopup").style.display="block";
+}
+function saveNestedEntry(){
+    const nestedForm = document.getElementById("nestedForm");
+    let vals=[...nestedForm.querySelectorAll("input,select")].map(i=>i.value.trim());
+    if(vals.filter(v=>v!=="").length===0){ alert("कम से कम 1 value डालें"); return; }
+    let line=vals.join(" ");
+    if(nestedEditingIndex!==null){ entries[nestedEditingIndex]=line; nestedEditingIndex=null; } else { entries.push(line); }
+    document.getElementById("nestedEntryPopup").style.display="none"; renderList();
+}
+function deleteNested(i){ if(confirm("Delete this entry?")){ entries.splice(i,1); renderList(); } }
+function submitAllEntries() { 
+    const newValue = entries.length > 0 ? entries.join("\n") : "";
+    if (activeField9Input) { activeField9Input.value = newValue; }
+    closePopup('popupModal9'); activeField9Input = null;
+}
+</script>
+</body>
+</html>
