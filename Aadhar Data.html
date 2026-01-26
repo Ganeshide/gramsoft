@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gram Soft</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#f2f4f7}
+
+/* ===== TOP BAR ===== */
+.topbar{
+  height:56px;background:#1e88e5;color:#fff;
+  display:flex;align-items:center;padding:0 15px
+}
+.menu-btn{font-size:26px;cursor:pointer;margin-right:15px}
+.title{font-size:18px;font-weight:bold}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  position:fixed;top:0;left:-260px;width:260px;height:100%;
+  background:#fff;box-shadow:2px 0 10px rgba(0,0,0,.2);
+  transition:.3s;z-index:1000
+}
+.sidebar.active{left:0}
+.sidebar-header{background:#1e88e5;color:#fff;padding:16px;font-size:18px}
+.sidebar a{
+  display:block;padding:14px 16px;border-bottom:1px solid #eee;
+  text-decoration:none;color:#333;font-size:15px
+}
+
+/* ===== OVERLAY ===== */
+.overlay{
+  display:none;position:fixed;top:0;left:0;
+  width:100%;height:100%;background:rgba(0,0,0,.4);z-index:900
+}
+.overlay.show{display:block}
+
+/* ===== CONTENT ===== */
+.content{padding:16px}
+.page{display:none}
+.page.active{display:block}
+
+/* ===== CARDS ===== */
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{
+  background:#fff;padding:18px;border-radius:14px;
+  text-align:center;font-weight:600;
+  box-shadow:0 4px 10px rgba(0,0,0,.1);cursor:pointer
+}
+.card span{display:block;margin-top:8px;font-size:14px;color:#555}
+
+/* ===== FULL SCREEN ENTRY ===== */
+.fullscreen-form{
+  position:fixed;top:56px;left:0;width:100%;
+  height:calc(100vh - 56px);
+  background:#f2f4f7;overflow:auto;
+  padding:16px;padding-bottom:130px
+}
+
+/* ===== FIXED BUTTONS ===== */
+.form-actions{
+  position:fixed;left:0;bottom:0;width:100%;
+  display:flex;gap:12px;padding:10px 16px;
+  background:#f2f4f7;border-top:1px solid #ddd;z-index:2000
+}
+.form-actions button{
+  flex:1;padding:10px;font-size:14px;
+  border-radius:8px;border:none
+}
+.btn-submit{background:#1e88e5;color:#fff}
+.btn-cancel{background:#9e9e9e;color:#fff}
+
+/* ===== AUTH ===== */
+.box{
+  background:#fff;margin:18px;padding:20px;
+  border-radius:14px;box-shadow:0 4px 10px rgba(0,0,0,.1)
+}
+.hidden{display:none}
+input,button{
+  width:100%;padding:12px;margin:8px 0;
+  border-radius:8px;font-size:15px
+}
+input{border:1px solid #ccc}
+button{background:#1e88e5;color:#fff;border:none}
+.link{text-align:center;color:#1e88e5;cursor:pointer;margin-top:8px}
+
+/* ===== REPORT CARDS ===== */
+.report-card{
+  background:#fff;
+  padding:14px;
+  border-radius:12px;
+  box-shadow:0 3px 8px rgba(0,0,0,.1);
+  margin-bottom:12px;
+}
+.report-main{font-size:16px;font-weight:bold}
+.report-sub{font-size:13px;color:#555}
+</style>
+</head>
+
+<body>
+
+<!-- 🔐 LOGIN -->
+<div id="loginBox" class="box">
+  <h3>Login</h3>
+  <input id="lEmail" placeholder="Email / Username">
+  <input id="lPass" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <div class="link" onclick="showRegister()">New user? Register</div>
+  <div class="link" onclick="showForgot()">Forgot Password?</div>
+</div>
+
+<!-- 📝 REGISTER -->
+<div id="registerBox" class="box hidden">
+  <h3>Register</h3>
+  <input id="rName" placeholder="Name">
+  <input id="rMobile" placeholder="Mobile">
+  <input id="rEmail" placeholder="Email">
+  <input id="rPass" type="password" placeholder="Password">
+  <button onclick="registerUser()">Register</button>
+  <div class="link" onclick="showLogin()">Go to Login</div>
+</div>
+
+<!-- 🔁 FORGOT -->
+<div id="forgotBox" class="box hidden">
+  <h3>Forgot Password</h3>
+  <input placeholder="Registered Email">
+  <button>Send OTP</button>
+  <div class="link" onclick="showLogin()">Go to Login</div>
+</div>
+
+<!-- 📱 DASHBOARD -->
+<div id="dashboard" class="hidden">
+
+  <div class="topbar">
+    <div class="menu-btn" onclick="openMenu()">☰</div>
+    <div class="title">Gram Soft</div>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">Menu</div>
+    <a onclick="openPage('home')">🏠 Home</a>
+    <a onclick="openPage('n8')">📄 नमुना 8</a>
+    <a onclick="openPage('n9')">📄 नमुना 9</a>
+    <a onclick="openPage('bill')">💰 बिल / पावती</a>
+    <a onclick="openPage('ghosh')">📊 घोषवारा</a>
+    <a onclick="openPage('final')">✅ अंतिम घोषवारा</a>
+    <a onclick="logout()">🚪 Logout</a>
+  </div>
+
+  <div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+  <div class="content">
+    <div id="home" class="page active"><h3>Welcome to Gram Soft</h3></div>
+
+    <div id="n8" class="page"><h3>नमुना 8 (Coming Soon)</h3></div>
+
+    <div id="n9" class="page">
+      <h3>नमुना 9</h3>
+      <div class="card-grid">
+        <div class="card" onclick="openN9Entry()">📄 Entry<span>नमुना 9</span></div>
+        <div class="card" onclick="openPage('n9report')">📊 Report<span>नमुना 9</span></div>
+      </div>
+    </div>
+
+    <div id="bill" class="page"><h3>बिल / पावती</h3></div>
+    <div id="ghosh" class="page"><h3>घोषवारा</h3></div>
+    <div id="final" class="page"><h3>अंतिम घोषवारा</h3></div>
+
+    <div id="n9report" class="page">
+      <h3>नमुना 9 Report</h3>
+      <div id="reportData"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 📄 FULL SCREEN ENTRY -->
+<div id="n9entry" class="fullscreen-form hidden">
+  <h3>नमुना 9 – Entry</h3>
+
+  <input id="f1" placeholder="Page No / 123 / 1.1">
+  <input id="f2" placeholder="Field 2">
+  <input id="f3" placeholder="Field 3">
+  <input id="f4" placeholder="Field 4">
+  <input id="f5" placeholder="Field 5">
+  <input id="f6" placeholder="Field 6">
+  <input id="f7" placeholder="Field 7">
+  <input id="f8" placeholder="Field 8">
+  <input id="f9" placeholder="Field 9">
+  <input id="f10" placeholder="Field 10">
+  <input id="f11" placeholder="Field 11">
+  <input id="f12" placeholder="Field 12">
+  <input id="f13" placeholder="Field 13">
+  <input id="f14" placeholder="Field 14">
+  <input id="f15" placeholder="Field 15">
+
+  <div class="form-actions">
+    <button class="btn-submit" onclick="saveN9()">Submit</button>
+    <button class="btn-cancel" onclick="closeN9Entry()">Cancel</button>
+  </div>
+</div>
+
+<script>
+const SESSION_KEY="gramsoft_login";
+
+/* ===== AUTO LOGIN ===== */
+if(localStorage.getItem(SESSION_KEY)) showDashboard();
+
+/* ===== AUTH ===== */
+function login(){
+  if(lEmail.value==="admin" && lPass.value==="admin@123"){
+    localStorage.setItem(SESSION_KEY,"admin");
+    showDashboard();return;
+  }
+  alert("User login backend already connected earlier");
+  localStorage.setItem(SESSION_KEY,"user");
+  showDashboard();
+}
+function registerUser(){alert("Register backend connected earlier")}
+function showDashboard(){
+  loginBox.classList.add("hidden");
+  registerBox.classList.add("hidden");
+  forgotBox.classList.add("hidden");
+  dashboard.classList.remove("hidden");
+}
+function showRegister(){loginBox.classList.add("hidden");registerBox.classList.remove("hidden")}
+function showForgot(){loginBox.classList.add("hidden");forgotBox.classList.remove("hidden")}
+function showLogin(){registerBox.classList.add("hidden");forgotBox.classList.add("hidden");loginBox.classList.remove("hidden")}
+
+/* ===== SIDEBAR ===== */
+function openMenu(){sidebar.classList.add("active");overlay.classList.add("show")}
+function closeMenu(){sidebar.classList.remove("active");overlay.classList.remove("show")}
+function openPage(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  closeMenu();
+  if(id==="n9report") showN9Report();
+}
+
+/* ===== ENTRY / DATA ===== */
+function openN9Entry(){n9entry.classList.remove("hidden")}
+function closeN9Entry(){n9entry.classList.add("hidden")}
+
+function saveN9(){
+  let record=[];
+  for(let i=1;i<=15;i++) record.push(document.getElementById("f"+i).value);
+
+  let allData = JSON.parse(localStorage.getItem("n9data")) || [];
+  allData.push(record);
+  localStorage.setItem("n9data", JSON.stringify(allData));
+
+  for(let i=1;i<=15;i++) document.getElementById("f"+i).value="";
+
+  closeN9Entry();
+  showN9Report();
+  openPage("n9report");
+}
+
+function showN9Report(){
+  let allData = JSON.parse(localStorage.getItem("n9data")) || [];
+  if(allData.length===0){
+    reportData.innerHTML="No Data Available";
+    return;
+  }
+  let html="";
+  allData.forEach(d=>{
+    html+=`
+      <div class="report-card">
+        <div class="report-main">Page No : ${d[0]}</div>
+        <div class="report-sub">Field 2 : ${d[1]}</div>
+        <div class="report-sub">Field 3 : ${d[2]}</div>
+      </div>`;
+  });
+  reportData.innerHTML=html;
+}
+
+function logout(){localStorage.clear();location.reload()}
+</script>
+
+</body>
+</html>
