@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saachi Fashion - Server Fixed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        /* --- THEME & UI --- */
+        :root { --primary: #6200ea; --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%); --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --success: #10b981; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--text); padding-bottom: 120px; -webkit-tap-highlight-color: transparent; }
+
+        /* HEADER */
+        header { background: var(--gradient); color: white; padding: 25px 20px 55px 20px; border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        h1 { margin: 0; font-size: 24px; font-weight: 700; }
+        .cal-btn-header { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); padding: 8px 12px; border-radius: 12px; color: white; cursor: pointer; font-size: 18px; backdrop-filter: blur(5px); }
+
+        /* TABS */
+        .tab-container { display: flex; gap: 8px; background: rgba(255,255,255,0.25); padding: 5px; border-radius: 16px; margin-top: 15px; backdrop-filter: blur(5px); }
+        .tab-btn { flex: 1; padding: 10px 0; border: none; border-radius: 12px; background: transparent; color: rgba(255,255,255,0.95); font-weight: 600; font-size: 12px; transition: 0.3s; cursor: pointer; }
+        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .tab-content { display: none; padding-bottom: 80px; margin-top: -30px; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+
+        /* STATS */
+        .stats-box { display: flex; gap: 10px; padding: 0 20px; margin-top: -40px; margin-bottom: 25px; position: relative; z-index: 10; }
+        .stat { flex: 1; background: white; padding: 15px 5px; border-radius: 18px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.08); cursor: pointer; transition: transform 0.1s; }
+        .stat:active { transform: scale(0.95); }
+        .s-num { font-size: 22px; font-weight: 800; color: #4b5563; line-height: 1; }
+        .s-lbl { font-size: 9px; color: #9ca3af; font-weight: 700; text-transform: uppercase; margin-top: 5px; }
+
+        /* LIST & CARDS */
+        .order-list { padding: 0 20px; }
+        .card { background: white; padding: 18px; border-radius: 18px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border-left: 5px solid transparent; }
+        .card.urgent { border-left-color: var(--danger); }
+        .card.active { border-left-color: var(--primary); }
+        .card.done { border-left-color: var(--success); opacity: 0.8; background: #f9f9f9; }
+
+        .top-row { display: flex; justify-content: space-between; align-items: flex-start; }
+        .c-name { font-weight: 600; font-size: 16px; }
+        .c-desc { font-size: 12px; color: #6b7280; margin-top: 2px; }
+        .actions { margin-top: 15px; padding-top: 10px; border-top: 1px dashed #eee; display: flex; gap: 8px; }
+        .btn { flex: 1; padding: 10px; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-bill { background: #eff6ff; color: #2563eb; }
+        .btn-meas { background: #fff; border: 1px solid #ddd; color: #555; max-width: 50px; font-size: 18px; }
+        .btn-done { background: #f0fdf4; color: #166534; }
+        .btn-edit { background: #f9fafb; color: #374151; max-width: 50px; font-size: 16px; }
+
+        /* UNPAID CARD */
+        .unpaid-card { background: white; border-radius: 16px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 5px solid var(--danger); display: flex; flex-direction: column; gap: 10px; }
+        .unpaid-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .u-name { font-weight: 700; font-size: 15px; color: #333; }
+        .u-ord { font-size: 11px; color: #666; }
+        .u-amt { text-align: right; }
+        .u-due { font-size: 18px; font-weight: 800; color: var(--danger); }
+        .u-total { font-size: 10px; color: #888; }
+        .u-actions { display: flex; gap: 10px; border-top: 1px dashed #eee; padding-top: 10px; }
+        .u-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .u-btn-pay { background: var(--primary); color: white; }
+        .u-btn-wa { background: #dcfce7; color: #166534; }
+
+        /* MODALS */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; align-items: flex-end; justify-content: center; backdrop-filter: blur(3px); }
+        .modal.active { display: flex; }
+        .modal-box { background: white; width: 100%; max-width: 500px; border-top-left-radius: 25px; border-top-right-radius: 25px; padding: 25px; max-height: 90vh; overflow-y: auto; }
+        
+        input, select { width: 100%; padding: 14px; border: 2px solid #f3f4f6; border-radius: 12px; margin-bottom: 12px; font-size: 14px; box-sizing: border-box; background: #f9fafb; font-weight: 500; }
+        .save-btn { width: 100%; padding: 15px; background: var(--gradient); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        .item-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; background: #fff; border: 1px solid #eee; padding: 5px; border-radius: 10px; }
+        .item-row.locked { opacity: 0.6; pointer-events: none; background: #f3f4f6; }
+        
+        /* BILL CSS */
+        .bill-paper { background: white; padding: 0; color: #333; font-family: Helvetica, sans-serif; }
+        .inv-header-strip { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 10px 10px 0 0; }
+        .inv-title { font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+        .inv-body { border: 1px solid #eee; border-top: none; padding: 20px; border-radius: 0 0 10px 10px; }
+        .inv-client-row { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px; border-bottom: 1px dashed #ddd; padding-bottom: 10px; }
+        .inv-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; }
+        .inv-table th { background: #f8fafc; color: #475569; padding: 10px; text-align: left; font-weight: 700; border-bottom: 2px solid #e2e8f0; }
+        .inv-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        .inv-summary { display: flex; justify-content: flex-end; }
+        .inv-totals-box { width: 50%; font-size: 13px; }
+        .inv-total-row { display: flex; justify-content: space-between; padding: 5px 0; }
+        .inv-grand-total { font-weight: 800; font-size: 16px; color: var(--primary); border-top: 2px solid #e2e8f0; padding-top: 5px; margin-top: 5px; }
+        .inv-footer-row { margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .inv-sign { border-top: 1px solid #333; width: 100px; text-align: center; font-size: 10px; padding-top: 5px; font-weight: bold; }
+
+        /* CALENDAR */
+        .calendar-wrapper { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; }
+        .cal-header { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 10px; gap: 5px; }
+        .cal-date { aspect-ratio: 1; border-radius: 8px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .cal-date.full { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; pointer-events: none; opacity: 0.8; }
+        .cal-date.free { background: #d1fae5; color: #047857; border-color: #6ee7b7; font-weight: bold; }
+        .cal-date.empty { background: transparent; border: none; }
+        .cal-info { font-size: 8px; font-weight: 700; margin-top: 2px; }
+
+        /* EXTRAS */
+        .fab { position: fixed; bottom: 90px; right: 20px; width: 60px; height: 60px; background: var(--gradient); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; z-index: 100; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: white; border-radius: 30px; display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 100; }
+        .nav-item { font-size: 24px; opacity: 0.4; cursor: pointer; transition: 0.2s; }
+        .nav-item.active { opacity: 1; color: var(--primary); transform: translateY(-2px); }
+        .family-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .family-card { background: #eef2ff; padding: 12px; border-radius: 10px; text-align: center; font-weight: 600; color: var(--primary); cursor: pointer; border: 1px solid #c7d2fe; }
+        
+        /* Payment & History */
+        .pay-amount-box { background: #f0fdf4; border: 2px solid #16a34a; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .pay-input { font-size: 32px; font-weight: bold; text-align: center; border: none; background: transparent; width: 100%; outline: none; color: #166534; }
+        .qr-box { background: white; padding: 10px; border-radius: 10px; display: inline-block; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin: 10px 0; }
+        .qr-img { width: 150px; height: 150px; }
+        .hist-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+        .hist-table th { background: #f3f4f6; padding: 10px; text-align: left; border-bottom: 2px solid #ddd; }
+        .hist-table td { padding: 10px; border-bottom: 1px solid #eee; }
+        .hist-btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-hist { flex: 1; padding: 10px; border: 1px solid #ddd; background: #fff; border-radius: 8px; font-size: 12px; font-weight: 600; color: #555; cursor: pointer; }
+        
+        .page { display: none; } .page.active { display: block; animation: fadeIn 0.3s; } @keyframes fadeIn { from{opacity:0}to{opacity:1} }
+    </style>
+</head>
+<body>
+
+    <div id="p-home" class="page active">
+        <header>
+            <div class="header-top"><h1>Saachi Fashion</h1><div style="font-size:12px;opacity:0.9;" id="headerDate"></div></div>
+        </header>
+        <div class="stats-box">
+            <div class="stat"><div class="s-num" id="s-work">0</div><div class="s-lbl">Load (Days)</div></div>
+            <div class="stat"><div class="s-num" id="s-pending">0</div><div class="s-lbl">Qty</div></div>
+            <div class="stat" onclick="showUnpaidList()"><div class="s-num" id="s-unpaid" style="color:#ef4444;">0</div><div class="s-lbl">Unpaid (View)</div></div>
+        </div>
+        <div style="padding:0 20px; font-weight:700; margin-bottom:10px;">📉 Recently Added</div>
+        <div class="order-list" id="homeList"></div>
+    </div>
+
+    <div id="p-work" class="page">
+        <header>
+            <div class="header-top"><h1>Orders</h1><button class="cal-btn-header" onclick="openCalendar()">📅</button></div>
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="switchTab('urgent', this)">🚨 Urgent</button>
+                <button class="tab-btn" onclick="switchTab('upcoming', this)">📅 Upcoming</button>
+                <button class="tab-btn" onclick="switchTab('finished', this)">✅ Finish</button>
+            </div>
+        </header>
+        <div id="tab-urgent" class="tab-content active order-list"></div>
+        <div id="tab-upcoming" class="tab-content order-list"></div>
+        <div id="tab-finished" class="tab-content order-list"></div>
+    </div>
+
+    <div id="p-list" class="page">
+        <header><h1>All Orders</h1></header>
+        <div style="padding: 20px; margin-top: -30px;">
+            <input type="text" id="searchBox" placeholder="Search..." onkeyup="renderAll()">
+            <div class="order-list" id="allList"></div>
+        </div>
+    </div>
+
+    <div class="fab" onclick="openModal()">+</div>
+    <div class="nav">
+        <div class="nav-item active" onclick="switchPage('p-home', this)">🏠</div>
+        <div class="nav-item" onclick="switchPage('p-work', this)">📅</div>
+        <div class="nav-item" onclick="switchPage('p-list', this)">📂</div>
+    </div>
+
+    <div class="modal" id="formModal">
+        <div class="modal-box">
+            <h2 id="modalTitle">New Order</h2>
+            <input type="hidden" id="editId">
+            <label style="font-size:11px;color:#666;">Mobile No</label>
+            <input type="tel" id="inPhone" placeholder="Mobile" oninput="checkFamilyInput(this.value)">
+            <label style="font-size:11px;color:#666;">Name</label>
+            <input id="inName" placeholder="Customer Name">
+            <div style="font-size:12px;font-weight:700;color:#666;margin:10px 0;">ITEMS</div>
+            <div id="itemsContainer"></div>
+            <button onclick="addItem()" style="width:100%;padding:10px;border:2px dashed #ddd;background:none;border-radius:10px;color:#666;">+ Add Item</button>
+            <div style="font-size:12px;font-weight:700;color:#666;margin:15px 0 5px;">DELIVERY</div>
+            <input type="text" id="dateInput" readonly placeholder="Select Date 📅" onclick="openCalendar()" style="background:#fff;cursor:pointer;font-weight:bold;color:var(--primary);text-align:center;border:2px dashed var(--primary);">
+            <div id="newOrderAdvanceSection"><input type="number" id="inAdvance" placeholder="Advance Payment (₹)"></div>
+            <button onclick="document.getElementById('measureModal').classList.add('active')" style="width:100%;padding:10px;background:#f3f4f6;border:none;border-radius:10px;margin-bottom:10px;font-weight:600;">📏 Measurements</button>
+            <button class="save-btn" onclick="saveOrder()">SAVE ORDER</button>
+            <button onclick="closeModal()" style="width:100%;padding:10px;background:none;border:none;color:#666;">Cancel</button>
+        </div>
+    </div>
+
+    <div class="modal" id="measureModal"><div class="modal-box"><h3>Measurements</h3><div class="measure-section"><div class="measure-title">Top</div><div class="m-grid"><div class="m-inp-group"><label>Length</label><input id="m_top_len"></div><div class="m-inp-group"><label>Chest</label><input id="m_top_chest"></div><div class="m-inp-group"><label>Waist</label><input id="m_top_waist"></div><div class="m-inp-group"><label>Shoulder</label><input id="m_top_sh"></div><div class="m-inp-group"><label>Sleeve</label><input id="m_top_sl"></div><div class="m-inp-group"><label>Arm Hole</label><input id="m_top_arm"></div></div></div><div class="measure-section"><div class="measure-title">Bottom</div><div class="m-grid"><div class="m-inp-group"><label>Length</label><input id="m_bot_len"></div><div class="m-inp-group"><label>Waist</label><input id="m_bot_waist"></div></div></div><button onclick="document.getElementById('measureModal').classList.remove('active')" style="width:100%;padding:12px;background:var(--primary);color:white;border:none;border-radius:10px;">Save</button></div></div>
+
+    <div class="modal" id="unpaidModal">
+        <div class="modal-box" style="background:#f8fafc;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+                <h3 style="margin:0;">Pending Payments</h3>
+                <button onclick="exportUnpaidPDF()" style="padding:5px 10px;font-size:11px;background:#333;color:white;border:none;border-radius:5px;">⬇ Export PDF</button>
+            </div>
+            <div id="unpaidContent" style="max-height:500px;overflow-y:auto;"></div>
+            <button onclick="document.getElementById('unpaidModal').classList.remove('active')" style="width:100%;padding:12px;margin-top:10px;background:white;border:1px solid #ddd;border-radius:10px;">Close</button>
+        </div>
+    </div>
+
+    <div class="modal" id="billModal">
+        <div class="modal-box" style="padding:0; background:#f5f5f5;">
+            <div id="billContent" class="bill-paper"></div>
+            <div style="padding:15px;background:#f8fafc;">
+                <div class="hist-btn-group">
+                    <button class="btn-hist" onclick="openHistory('pay')">📜 Pay History</button>
+                    <button class="btn-hist" onclick="openHistory('ord')">🗂 Ord History</button>
+                </div>
+                <div id="billActions"></div>
+                <div style="display:flex;gap:10px;margin-top:10px;">
+                    <button onclick="downloadPDF()" style="flex:1;padding:12px;background:#333;color:white;border-radius:10px;border:none;">⬇ PDF</button>
+                    <button onclick="document.getElementById('billModal').classList.remove('active')" style="flex:1;padding:12px;background:white;border:1px solid #ddd;border-radius:10px;">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="paymentModal"><div class="modal-box" style="text-align:center;"><h3>Collect Payment</h3><div style="font-size:12px;color:#666;margin-bottom:5px;" id="payMaxLabel"></div><div class="pay-amount-box"><input type="number" id="payAmountInput" class="pay-input" placeholder="0" oninput="updateDynamicQR()"></div><div class="qr-box"><img id="dynamicQR" src="" style="width:150px;height:150px;"><div style="font-size:10px;color:#666;">Scan to Pay</div></div><button onclick="savePayment()" style="width:100%;padding:15px;background:#10b981;color:white;border:none;border-radius:12px;font-weight:bold;margin-top:10px;">✅ Confirm</button><button onclick="document.getElementById('paymentModal').classList.remove('active')" style="width:100%;padding:10px;background:none;border:none;color:#666;margin-top:5px;">Cancel</button></div></div>
+    
+    <div class="modal" id="calendarModal"><div class="modal-box"><div class="calendar-wrapper"><div class="cal-header"><span onclick="changeMonth(-1)">❮</span><span id="calMonthYear"></span><span onclick="changeMonth(1)">❯</span></div><div class="cal-grid" style="grid-template-columns:repeat(7, 1fr); padding:5px; text-align:center; font-size:10px;"><div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div></div><div class="cal-grid" id="calDays"></div></div><button onclick="document.getElementById('calendarModal').classList.remove('active')" style="width:100%;padding:10px;margin-top:10px;">Close</button></div></div>
+    <div class="modal" id="familyModal" style="z-index:2100;"><div class="modal-box"><h3>Select Member</h3><div id="familyGrid" class="family-grid"></div><div style="display:flex;gap:10px;border-top:1px dashed #ccc;padding-top:10px;margin-top:10px;"><input id="newMemName" placeholder="New Name" style="margin:0;"><button onclick="selectNewMember()" style="width:80px;background:var(--primary);color:white;border:none;border-radius:10px;">Add</button></div><button onclick="document.getElementById('familyModal').classList.remove('active')" style="width:100%;margin-top:10px;">Cancel</button></div></div>
+    <div class="modal" id="histModal"><div class="modal-box"><h3 id="histTitle">History</h3><div id="histContent" style="max-height:400px;overflow-y:auto;margin-top:10px;"></div><button onclick="document.getElementById('histModal').classList.remove('active')" style="width:100%;padding:10px;margin-top:15px;background:#f3f4f6;border:none;border-radius:8px;">Close</button></div></div>
+
+<script>
+    // --- API SERVER CONFIG ---
+    const API_URL = 'api.php'; 
+    const UPI = "9595959360@ybl"; const SHOP = "SAACHI FASHION"; const ADDR = "Pune, MH"; 
+    const RATES = {'Simple Blouse': 250, 'Katori Blouse': 500, 'Princess Cut': 550, 'Designer': 600, 'Belt Blouse': 300};
+    const CAPACITY = 4;
+
+    let db = []; // Start with empty, load via API
+    let currentPayId = null, currentMaxPay = 0, currentViewId = null;
+    
+    document.getElementById('headerDate').innerText = new Date().toDateString();
+
+    // --- API FUNCTIONS ---
+    async function loadDB() {
+        try {
+            let res = await fetch(API_URL);
+            let text = await res.text();
+            if(text) db = JSON.parse(text);
+            refresh();
+        } catch(e) { console.log("Load Error / New Install"); db = []; refresh(); }
+    }
+    async function saveDB() {
+        try {
+            await fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(db) });
+            refresh();
+        } catch(e) { alert("Save Error! Check Server."); }
+    }
+    loadDB();
+
+    // --- UNPAID LIST & PDF ---
+    function showUnpaidList() {
+        const unpaid = db.filter(o => { 
+            let t = o.items.reduce((s,i)=>s+(RATES[i.type]||0)*i.qty,0);
+            let p = (o.history||[]).reduce((s,h)=>s+h.amount,0);
+            return (t - p) > 0;
+        });
+
+        let html = '';
+        if(unpaid.length === 0) {
+            html = '<div style="text-align:center;padding:30px;color:#999;">No pending payments!</div>';
+        } else {
+            unpaid.forEach(o => {
+                let t = o.items.reduce((s,i)=>s+(RATES[i.type]||0)*i.qty,0);
+                let p = (o.history||[]).reduce((s,x)=>s+x.amount,0);
+                let due = t - p;
+                
+                html += `
+                <div class="unpaid-card">
+                    <div class="unpaid-top">
+                        <div><div class="u-name">${o.name}</div><div class="u-ord">#${o.id} • ${o.date}</div></div>
+                        <div class="u-amt"><div class="u-due">₹${due}</div><div class="u-total">Total: ₹${t}</div></div>
+                    </div>
+                    <div class="u-actions">
+                        <button class="u-btn u-btn-pay" onclick="document.getElementById('unpaidModal').classList.remove('active'); openPaymentModal(${o.id}, ${due})">Collect</button>
+                        <button class="u-btn u-btn-wa" onclick="sendWhatsapp('${o.phone}', ${due}, ${o.id})">WhatsApp</button>
+                    </div>
+                </div>`;
+            });
+        }
+        document.getElementById('unpaidContent').innerHTML = html;
+        document.getElementById('unpaidModal').classList.add('active');
+    }
+
+    function sendWhatsapp(phone, due, id) {
+        let msg = `Hello, your payment of ₹${due} is pending for Order #${id} at ${SHOP}. Please pay to avoid delay.`;
+        window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    function exportUnpaidPDF() {
+        // Generate a simple table structure specifically for PDF
+        const unpaid = db.filter(o => { 
+            let t = o.items.reduce((s,i)=>s+(RATES[i.type]||0)*i.qty,0);
+            let p = (o.history||[]).reduce((s,h)=>s+h.amount,0);
+            return (t - p) > 0;
+        });
+        
+        let pdfHtml = `
+            <div style="padding:20px; font-family:sans-serif;">
+                <h2 style="color:#6200ea;text-align:center;">Unpaid List Report</h2>
+                <p style="text-align:center;">${new Date().toLocaleDateString()}</p>
+                <table style="width:100%;border-collapse:collapse;margin-top:20px;font-size:12px;">
+                    <thead><tr style="background:#f3f4f6;"><th style="padding:10px;text-align:left;">Customer</th><th style="padding:10px;text-align:right;">Total</th><th style="padding:10px;text-align:right;">Paid</th><th style="padding:10px;text-align:right;">Due</th></tr></thead>
+                    <tbody>
+        `;
+        
+        unpaid.forEach(o => {
+            let t = o.items.reduce((s,i)=>s+(RATES[i.type]||0)*i.qty,0);
+            let p = (o.history||[]).reduce((s,x)=>s+x.amount,0);
+            pdfHtml += `<tr><td style="padding:10px;border-bottom:1px solid #eee;">${o.name} (${o.phone})</td><td style="padding:10px;text-align:right;border-bottom:1px solid #eee;">₹${t}</td><td style="padding:10px;text-align:right;border-bottom:1px solid #eee;">₹${p}</td><td style="padding:10px;text-align:right;border-bottom:1px solid #eee;font-weight:bold;">₹${t-p}</td></tr>`;
+        });
+        
+        pdfHtml += `</tbody></table></div>`;
+        
+        // Use a temporary container for PDF generation
+        let tempDiv = document.createElement('div');
+        tempDiv.innerHTML = pdfHtml;
+        html2pdf().from(tempDiv).save('saachi_unpaid_list.pdf');
+    }
+
+    // --- PRO BILL ---
+    function showBill(id){ 
+        currentViewId = id; const o = db.find(x => x.id === id);
+        let rows='', total=0; o.items.forEach(i=>{ let s=(RATES[i.type]||0)*i.qty; total+=s; rows+=`<tr><td>${i.type}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">₹${s}</td></tr>` }); 
+        let paid=(o.history||[]).reduce((s,p)=>s+p.amount,0), bal=total-paid; if(bal<0)bal=0;
+        
+        document.getElementById('billContent').innerHTML = `
+            <div class="inv-header-strip">
+                <div class="inv-title">${SHOP}</div>
+                <div style="font-size:10px;text-align:right;">${ADDR}</div>
+            </div>
+            <div class="inv-body">
+                <div class="inv-client-row">
+                    <div><strong>Bill To:</strong><br>${o.name}<br>${o.phone}</div>
+                    <div style="text-align:right;"><strong>Inv #:</strong> ${o.id}<br><strong>Date:</strong> ${new Date().toLocaleDateString()}<br><strong>Due:</strong> ${o.date}</div>
+                </div>
+                <table class="inv-table">
+                    <thead><tr><th>Description</th><th style="text-align:center">Qty</th><th style="text-align:right">Amount</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                <div class="inv-summary">
+                    <div class="inv-totals-box">
+                        <div class="inv-total-row"><span>Total:</span><strong>₹${total}</strong></div>
+                        <div class="inv-total-row" style="color:green;"><span>Paid:</span><span>- ₹${paid}</span></div>
+                        <div class="inv-grand-total inv-total-row"><span>Balance Due:</span><span>₹${bal}</span></div>
+                    </div>
+                </div>
+                <div class="inv-footer-row">
+                    <div style="text-align:center;">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=${UPI}&pn=${encodeURIComponent(SHOP)}&am=${bal}&tn=Inv${o.id}" style="width:70px;height:70px;">
+                        <div style="font-size:8px;">Scan & Pay</div>
+                    </div>
+                    <div class="inv-sign">Authorized Sign</div>
+                </div>
+            </div>
+        `;
+        document.getElementById('billActions').innerHTML = bal > 0 ? `<button class="collect-btn" onclick="openPaymentModal(${o.id}, ${bal})">💸 Collect Payment (Due: ₹${bal})</button>` : `<div style="text-align:center;color:green;font-weight:bold;margin-top:10px;">✅ Fully Paid</div>`;
+        document.getElementById('billModal').classList.add('active'); 
+    }
+
+    // --- CALENDAR (FIXED) ---
+    let currentCalDate = new Date();
+    function openCalendar() { document.getElementById('calendarModal').classList.add('active'); renderCalendar(); }
+    function changeMonth(d) { currentCalDate.setMonth(currentCalDate.getMonth() + d); renderCalendar(); }
+    function renderCalendar() {
+        const y=currentCalDate.getFullYear(), m=currentCalDate.getMonth();
+        document.getElementById('calMonthYear').innerText=new Date(y,m).toLocaleString('default',{month:'long',year:'numeric'});
+        const g=document.getElementById('calDays'); g.innerHTML='';
+        let l={}; db.filter(o=>o.status=='Pending').forEach(o=>{if(!l[o.date])l[o.date]=0;l[o.date]+=o.totalQty});
+        const fd=new Date(y,m,1).getDay(), dim=new Date(y,m+1,0).getDate();
+        for(let i=0;i<fd;i++)g.innerHTML+='<div class="cal-date empty"></div>';
+        for(let d=1;d<=dim;d++){
+            let dt=new Date(y,m,d), s=dt.toDateString(), ld=l[s]||0, rem=CAPACITY-ld, c='free', t=`${rem} Left`;
+            if(ld>=CAPACITY){c='full';t='FULL'} else if(ld>0){c='free';t=`${rem} Left`}
+            if(dt<new Date().setHours(0,0,0,0)||dt.getDay()===0){c='empty';t='-'}
+            g.innerHTML+=`<div class="cal-date ${c}" ${c!='full'&&c!='empty'?`onclick="selectDate('${s}')"`:''}><div>${d}</div><div class="cal-info">${t}</div></div>`;
+        }
+    }
+    function selectDate(s){ document.getElementById('dateInput').value=s; document.getElementById('calendarModal').classList.remove('active'); }
+
+    // --- CORE LOGIC ---
+    function refresh() {
+        const p=db.filter(o=>o.status=='Pending'), f=db.filter(o=>o.status=='Finished');
+        document.getElementById('s-pending').innerText=p.reduce((s,o)=>s+o.totalQty,0);
+        document.getElementById('s-work').innerText=Math.ceil(p.reduce((s,o)=>s+o.totalQty,0)/CAPACITY);
+        let up=0; db.forEach(o=>{ let t=o.items.reduce((s,i)=>s+(RATES[i.type]||0)*i.qty,0), pd=(o.history||[]).reduce((s,h)=>s+h.amount,0); if((t-pd)>0) up++; }); document.getElementById('s-unpaid').innerText=up;
+        renderList('homeList',p.slice(0,3)); renderList('tab-urgent',p.filter(o=>getDays(o.date)<=2)); renderList('tab-upcoming',p.filter(o=>getDays(o.date)>2)); renderList('tab-finished',f);
+    }
+    function renderList(tid,d){ const el=document.getElementById(tid); el.innerHTML=''; if(d.length==0){el.innerHTML='<div style="text-align:center;padding:20px;color:#999;">No orders</div>';return} d.forEach(o=>{
+        let pr=0; o.items.forEach(i=>{pr+=(RATES[i.type]||0)*i.qty}); let bal=pr-(o.history||[]).reduce((s,p)=>s+p.amount,0);
+        el.innerHTML+=`<div class="card ${o.status=='Finished'?'done':(getDays(o.date)<=2?'urgent':'active')}"><div class="top-row"><div><div class="c-name">${o.name} <span style="font-size:10px;color:${bal<=0?'green':'orange'};background:#eee;padding:2px 5px;border-radius:4px;">${bal<=0?'Paid':'Unpaid'}</span></div></div><div style="text-align:right;"><div style="font-weight:bold;">₹${pr}</div><div style="font-size:11px;color:#6200ea">${o.date}</div></div></div><div class="actions"><button class="btn btn-bill" onclick="showBill(${o.id})">🧾 Bill</button><button class="btn btn-meas" onclick="viewMeasure(${o.id})">📏</button><button class="btn btn-done" onclick="toggleStatus(${o.id})">✔ Finish</button><button class="btn btn-edit" onclick="openEdit(${o.id})">✎</button></div></div>`;
+    })}
+
+    function openPaymentModal(id, max) { currentPayId=id; currentMaxPay=max; document.getElementById('payMaxLabel').innerText=`Max Due: ₹${max}`; document.getElementById('payAmountInput').value=max; updateDynamicQR(); document.getElementById('paymentModal').classList.add('active'); }
+    function updateDynamicQR() { let amt=document.getElementById('payAmountInput').value||0; document.getElementById('dynamicQR').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`upi://pay?pa=${UPI}&pn=${encodeURIComponent(SHOP)}&am=${amt}&tn=Order${currentPayId}&cu=INR`)}`; }
+    function savePayment() { const amt=parseInt(document.getElementById('payAmountInput').value); if(!amt||amt<=0||amt>currentMaxPay) return alert("Invalid"); const idx=db.findIndex(x=>x.id==currentPayId); if(!db[idx].history) db[idx].history=[]; db[idx].history.push({date:new Date().toLocaleDateString(),amount:amt,type:'Part-Pay'}); saveDB(); document.getElementById('paymentModal').classList.remove('active'); showBill(currentPayId); refresh(); }
+
+    function openHistory(type) {
+        const o = db.find(x => x.id == currentViewId); if(!o) return;
+        let html = '';
+        if(type === 'pay') {
+            html = `<table class="hist-table"><tr><th>Date</th><th>Type</th><th>Amt</th></tr>`;
+            if(o.history && o.history.length > 0) o.history.forEach(h => html += `<tr><td>${h.date}</td><td>${h.type||'Pay'}</td><td>₹${h.amount}</td></tr>`);
+            else html += `<tr><td colspan="3" style="text-align:center">No payments</td></tr>`;
+            html += `</table>`;
+        } else {
+            const custOrders = db.filter(x => x.phone === o.phone).sort((a,b) => new Date(b.date) - new Date(a.date));
+            html = `<table class="hist-table"><tr><th>Date</th><th>Items</th><th>Status</th></tr>`;
+            custOrders.forEach(x => { let badge = x.status === 'Finished' ? 'badge-green' : 'badge-orange'; html += `<tr><td>${x.date}</td><td>${x.items.length} Items</td><td><span class="badge-hist ${badge}">${x.status}</span></td></tr>`; });
+            html += `</table>`;
+        }
+        document.getElementById('histContent').innerHTML = html; document.getElementById('histModal').classList.add('active');
+    }
+
+    function checkFamilyInput(phone) { if(phone.length<10) return; const ms = db.filter(o => o.phone === phone); const names = [...new Set(ms.map(o => o.name))]; if(names.length > 0) { let h = ''; names.forEach(n => h += `<div class="family-card" onclick="selectFamily('${n}')">${n}</div>`); document.getElementById('familyGrid').innerHTML = h; document.getElementById('familyModal').classList.add('active'); } else clearMeasurements(); }
+    function selectFamily(n) { document.getElementById('inName').value = n; document.getElementById('familyModal').classList.remove('active'); const pending = db.find(o => o.phone === document.getElementById('inPhone').value && o.name === n && o.status === 'Pending'); if(pending) { if(confirm("Active Order Found. Edit?")) openEdit(pending.id); return; } loadLastMeasurements(document.getElementById('inPhone').value, n); }
+    function selectNewMember() { document.getElementById('inName').value=document.getElementById('newMemName').value; document.getElementById('familyModal').classList.remove('active'); clearMeasurements(); }
+    function loadLastMeasurements(phone, name) { const prev = db.filter(o => o.phone === phone && o.name === name).sort((a,b) => b.id - a.id); if(prev.length > 0 && prev[0].measurements) { loadMeasurements(prev[0].measurements); alert("Measurements Auto-Loaded"); } else clearMeasurements(); }
+    
+    function getMeasurements() { return { top: { len: v('m_top_len'), chest: v('m_top_chest'), waist: v('m_top_waist'), sh: v('m_top_sh'), sl: v('m_top_sl'), arm: v('m_top_arm') }, bottom: { len: v('m_bot_len'), waist: v('m_bot_waist') } }; }
+    function loadMeasurements(m){ if(!m) { clearMeasurements(); return; } if(m.top) { s('m_top_len',m.top.len);s('m_top_chest',m.top.chest);s('m_top_waist',m.top.waist);s('m_top_sh',m.top.sh);s('m_top_sl',m.top.sl);s('m_top_arm',m.top.arm); } if(m.bottom) { s('m_bot_len',m.bottom.len);s('m_bot_waist',m.bottom.waist); } }
+    function clearMeasurements() { ['m_top_len','m_top_chest','m_top_waist','m_top_sh','m_top_sl','m_top_arm','m_bot_len','m_bot_waist'].forEach(id => document.getElementById(id).value = ''); }
+    function v(id){ return document.getElementById(id).value; } function s(id,val){ document.getElementById(id).value=val||''; }
+    function viewMeasure(id) { const o = db.find(x => x.id === id); if(!o) return; loadMeasurements(o.measurements); document.getElementById('measureModal').classList.add('active'); }
+
+    function openModal(k=false){ document.getElementById('formModal').classList.add('active'); if(!k){ document.getElementById('editId').value=''; document.querySelectorAll('input').forEach(i=>i.value=''); document.getElementById('itemsContainer').innerHTML=''; addItem(); clearMeasurements(); } }
+    function closeModal(){ document.getElementById('formModal').classList.remove('active'); }
+    function addItem(t='Simple Blouse',q=1){ const d=document.createElement('div'); d.className='item-row'; d.innerHTML=`<select class="i-type" style="flex:2">${Object.keys(RATES).map(k=>`<option ${k==t?'selected':''}>${k}</option>`).join('')}</select><input type="number" class="i-qty" value="${q}" style="width:50px;"><button onclick="this.parentElement.remove()" style="border:none;color:red">×</button>`; document.getElementById('itemsContainer').appendChild(d); }
+    function openEdit(id){ const o=db.find(x=>x.id==id); openModal(); document.getElementById('editId').value=id; document.getElementById('inName').value=o.name; document.getElementById('inPhone').value=o.phone; document.getElementById('dateInput').value=o.date; document.getElementById('itemsContainer').innerHTML=''; o.items.forEach(i=>addItem(i.type,i.qty)); loadMeasurements(o.measurements); }
+    function saveOrder() { const id=document.getElementById('editId').value, nm=document.getElementById('inName').value, ph=document.getElementById('inPhone').value, dt=document.getElementById('dateInput').value, adv=parseInt(document.getElementById('inAdvance').value)||0; if(!nm||!dt) return alert("Required"); let items=[],tq=0; document.querySelectorAll('.item-row').forEach(r=>{ const t=r.querySelector('.i-type').value, q=parseInt(r.querySelector('.i-qty').value)||0; if(q>0){ items.push({type:t,qty:q}); tq+=q; } }); if(items.length==0) return alert("Add items"); let hist=[]; if(adv>0) hist.push({date:new Date().toLocaleDateString(), amount:adv, type:'Advance'}); const d = { id:id?parseInt(id):Date.now(), name:nm, phone:ph, items:items, totalQty:tq, measurements:getMeasurements(), status:'Pending', date:dt, history:id?(db.find(x=>x.id==id).history||[]):hist, payStatus:'Part' }; if(id) { const i=db.findIndex(x=>x.id==id); if(i!==-1) db[i]=d; } else db.push(d); saveDB(); closeModal(); }
+    
+    function downloadPDF(){ html2pdf().from(document.getElementById('billContent')).save() }
+    function getDays(d){ return Math.ceil((new Date(d)-new Date().setHours(0,0,0,0))/864e5) }
+    function toggleStatus(id){ const i=db.findIndex(x=>x.id==id); db[i].status=db[i].status=='Pending'?'Finished':'Pending'; saveDB(); }
+    function renderAll(){ renderList('allList',db.filter(o=>o.name.toLowerCase().includes(document.getElementById('searchBox').value.toLowerCase()) || o.phone.includes(document.getElementById('searchBox').value))) }
+    function switchTab(t,b){ document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active')); document.getElementById('tab-'+t).classList.add('active'); document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }
+    function switchPage(p,b){ document.querySelectorAll('.page').forEach(x=>x.classList.remove('active')); document.getElementById(p).classList.add('active'); document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); b.classList.add('active'); refresh(); }
+</script>
+</body>
+</html>
